@@ -1,109 +1,80 @@
-# Learning pygame with Pong
-# youtube.com/watch?v=Qf3-aDXG8q4
+import pygame
+import sys
 
-#To make a game in pygame, you need to do the following:
-#1. Set up the main window
-#2. Set up the main game loop
-#3. Handle events
-#4. Add game logic
-#5. Add visuals
-#6. Update the window
+# General Setup
+pygame.init()
+clock = pygame.time.Clock()
 
-import pygame, sys, random
-
-def ball_animation():
-    global ball_speed_x, ball_speed_y
-    ball.x += ball_speed_x
-    ball.y += ball_speed_y
-
-    # Vertical and Horizontal to reverse the speed for them separately
-    if ball.top <= 0 or ball.bottom >= screen_height:
-        ball_speed_y *= -1 # to reverse speed
-    if ball.left <= 0 or ball.right >= screen_width:
-        ball_start()
-    
-    # Collision with the paddles
-    if ball.colliderect(player) or ball.colliderect(opponent):
-        ball_speed_x *= -1
-
-def player_animation():
-    player.y += player_speed
-
-    if player.top <= 0:
-        player.top = 0
-    if player.bottom >= screen_height:
-        player.bottom = screen_height
-
-def opponent_ai():
-    if opponent.top < ball.y:
-        opponent.top += opponent_speed
-    if opponent.bottom > ball.y:
-        opponent.bottom -= opponent_speed
-
-    if opponent.top <= 0:
-        opponent.top = 0
-    if opponent.bottom >= screen_height:
-        opponent.bottom = screen_height
-        
-def ball_start():
-    global ball_speed_x, ball_speed_y
-    ball.center = (screen_width/2, screen_height/2)
-    ball_speed_y *= random.choice((1,-1))
-    ball_speed_x *= random.choice((1,-1))
-    
-pygame.init() #initializes all the pygame modules
-clock = pygame.time.Clock() #creates a clock object to track time
-
-#Setting up the main window for the game
+# Setting up the main window for the game
 screen_width = 1280
 screen_height = 960
-screen = pygame.display.set_mode((screen_width, screen_height)) #creates a display surface
-pygame.display.set_caption("Pong") #sets the window title
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("Main Menu")
 
-#Game Rectangles
-ball = pygame.Rect(screen_width/2 - 15, screen_height/2 - 15, 30, 30) #creates a rectangle for the ball
-player = pygame.Rect(screen_width - 20, screen_height/2 - 70, 10, 140) #creates a rectangle for the player paddle
-opponent = pygame.Rect(10, screen_height/2 - 70, 10, 140) #creates a rectangle for the opponent paddle
+# Colors
+bg_color = pygame.Color('black')
+text_color = pygame.Color('white')
+button_color = pygame.Color('gray')
+button_hover_color = pygame.Color('lightgray')
 
-#Colors
-bg_color = pygame.Color('grey12')
-light_grey = (200, 200, 200)
+# Game Variables
+menu_font = pygame.font.Font("freesansbold.ttf", 128)
+option_font = pygame.font.Font("freesansbold.ttf", 62)
 
-#Game Variables
-ball_speed_x = 7 * random.choice((1,-1)) #ball speed in the x direction - random direction at the beginning of the game
-ball_speed_y = 7 * random.choice((1,-1)) #ball speed in the y direction - random direction at the beginning of the game
-player_speed = 0 #player speed in the y direction
-opponent_speed = 7 #opponent speed in the y direction
+# Button class for the menu options
+class Button:
+    def __init__(self, x, y, width, height, text, font, action):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.text = text
+        self.font = font
+        self.action = action
 
+    def draw(self):
+        pygame.draw.rect(screen, button_color, self.rect)
+        pygame.draw.rect(screen, text_color, self.rect, 3)
 
-while True:
-    # Handling input
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-        if event.type == pygame.KEYDOWN: #checks if a key has been pressed
-            if event.key == pygame.K_DOWN: #checks if the down arrow key has been pressed
-                player_speed += 6 #adds 6 to the player speed
-            if event.key == pygame.K_UP: #checks if the up arrow key has been pressed
-                player_speed -= 6 #subtracts 6 from the player speed
-        if event.type == pygame.KEYUP: #checks if a key has been released
-            if event.key == pygame.K_DOWN: #checks if the down arrow key has been released
-                player_speed -= 6 #subtracts 6 from the player speed
-            if event.key == pygame.K_UP: #checks if the up arrow key has been released
-                player_speed += 6 #adds 6 to the player speed
+        text_surface = self.font.render(self.text, True, text_color)
+        text_rect = text_surface.get_rect(center=self.rect.center)
+        screen.blit(text_surface, text_rect)
 
-    ball_animation()
-    player_animation()
-    opponent_ai()
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.rect.collidepoint(event.pos):
+                self.action()
 
-    # Visuals (drawing the game objects on descending order)
-    screen.fill(bg_color)
-    pygame.draw.rect(screen, light_grey, player)
-    pygame.draw.rect(screen, light_grey, opponent)
-    pygame.draw.ellipse(screen, light_grey, ball)
-    pygame.draw.aaline(screen, light_grey, (screen_width/2, 0), (screen_width/2, screen_height))
+# Start the game function
+def start_game():
+    pygame.quit()
+    execfile("pong.py")
 
-    # Updating the window
-    pygame.display.flip()
-    clock.tick(60)
+# Exit the game function
+def exit_game():
+    pygame.quit()
+    sys.exit()
+
+# Main Menu
+def main_menu():
+    start_button = Button(screen_width/2 - 150, 400, 300, 80, "Start", option_font, start_game)
+    exit_button = Button(screen_width/2 - 150, 500, 300, 80, "Exit", option_font, exit_game)
+
+    while True:
+        screen.fill(bg_color)
+
+        title_text = menu_font.render("Pong", True, text_color)
+        title_rect = title_text.get_rect(center=(screen_width/2, 200))
+        screen.blit(title_text, title_rect)
+
+        start_button.draw()
+        exit_button.draw()
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            start_button.handle_event(event)
+            exit_button.handle_event(event)
+
+# Start the main menu
+main_menu()
